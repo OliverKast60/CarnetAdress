@@ -1,0 +1,86 @@
+<?php 
+    $article = true;
+    include_once "header.php";
+    include_once "main.php";
+
+    $count = 0;
+    $list = [];
+    $query = "SELECT idarticle FROM article WHERE idarticle IN (SELECT idarticle FROM ligne_commande WHERE ligne_commande.idarticle = article.idarticle)";
+    $pdostmt = $pdo->prepare($query);
+    $pdostmt->execute();
+
+    foreach ($pdostmt->fetchAll(PDO::FETCH_NUM) as $tabvalues) {
+      foreach($tabvalues as $tabelements){
+        $list[] = $tabelements;
+      }
+    }
+?>
+
+    <h1 class="mt-5">Articles</h1>
+    <a href="addarticle.php" class="btn btn-primary" style="float: right; margin-bottom: 20px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 448 512">
+        <!--! Font Awesome Free 6.3.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc. -->
+        <path d="M240 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H32c-17.7 0-32 14.3-32 32s14.3 32 32 32H176V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H384c17.7 0 32-14.3 32-32s-14.3-32-32-32H240V80z"/>
+      </svg>
+      <span>Add</span>
+    </a>
+    <?php 
+      $query = "select * from article";
+      $pdostmt = $pdo->prepare($query);
+      $pdostmt->execute();
+      //var_dump($pdostmt->fetchAll(PDO::FETCH_ASSOC));
+    ?>
+    <table id="datatable" class="display">
+    <thead>
+        <tr>
+          <th>ID</th>
+          <th>DESCRIPTION</th>
+          <th>PRIX UNITAIRE</th>
+          <th>ACTION</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php
+          while($ligne = $pdostmt->fetch(PDO::FETCH_ASSOC)): 
+            $count++;
+        ?>
+          <tr>
+            <td><?php echo ucfirst($ligne["idarticle"]) ?></td>
+            <td><?php echo ucfirst($ligne["description"]) ?></td>
+            <td><?php echo ucfirst($ligne["prix_unitaire"]) ?></td>
+            <td>
+              <a href="modifArticle.php?id=<?php echo $ligne["idarticle"]; ?> "class="btn btn-success">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 512 512">
+                  <path d="M410.3 231l11.3-11.3-33.9-33.9-62.1-62.1L291.7 89.8l-11.3 11.3-22.6 22.6L58.6 322.9c-10.4 10.4-18 23.3-22.2 37.4L1 480.7c-2.5 8.4-.2 17.5 6.1 23.7s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L387.7 253.7 410.3 231zM160 399.4l-9.1 22.7c-4 3.1-8.5 5.4-13.3 6.9L59.4 452l23-78.1c1.4-4.9 3.8-9.4 6.9-13.3l22.7-9.1v32c0 8.8 7.2 16 16 16h32zM362.7 18.7L348.3 33.2 325.7 55.8 314.3 67.1l33.9 33.9 62.1 62.1 33.9 33.9 11.3-11.3 22.6-22.6 14.5-14.5c25-25 25-65.5 0-90.5L453.3 18.7c-25-25-65.5-25-90.5 0zm-47.4 168l-144 144c-6.2 6.2-16.4 6.2-22.6 0s-6.2-16.4 0-22.6l144-144c6.2-6.2 16.4-6.2 22.6 0s6.2 16.4 0 22.6z"/>
+                </svg>
+              </a>
+              <button type="button" class="btn btn-danger" data-bs-toggle="modal" <?php if(in_array($ligne["idarticle"], $list)){ echo "disabled"; } ?> data-bs-target="#deleteModal<?php echo $count; ?>">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 448 512">
+                  <path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"/>
+                </svg>
+              </button>
+            </td>
+          </tr>
+          <div class="modal fade" id="deleteModal<?php echo $count; ?>" tabindex="-1" aria-labelledby="exempleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content rounded-3 shadow">
+                <div class="modal-body p-4 text-center">
+                  <h5 class="modal-title">Suprimer un article?</h5>
+                  <p class="mb-0">Vous pouvez changer la donne en cliquant sur Annuler.</p>
+                </div>
+                <div class="modal-footer flex-nowrap p-0">
+                  <a href="delete.php?idarticle=<?php echo $ligne["idarticle"]; ?>" class="btn btn-lg btn-link fs-6 text-decoration-none text-danger col-6 py-3 m-0 rounded-0 border-end"><strong>Oui, Suprimer</strong></a>
+                  <button type="button" class="btn btn-lg btn-link fs-6 text-decoration-none col-6 py-3 m-0 rounded-0" data-bs-dismiss="modal">Annuler</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        <?php endwhile; ?>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<?php 
+    include_once "footer.php";
+?>
